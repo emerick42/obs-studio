@@ -71,8 +71,16 @@ static void crop_filter_update(void *data, obs_data_t *settings)
 	struct crop_filter_data *filter = data;
 
 	filter->absolute = !obs_data_get_bool(settings, "relative");
-	filter->left = (int)obs_data_get_int(settings, "left");
-	filter->top = (int)obs_data_get_int(settings, "top");
+	filter->left = (int)(
+        filter->absolute ?
+        obs_data_get_int(settings, "abs_left") :
+        obs_data_get_int(settings, "left")
+    );
+	filter->top = (int)(
+        filter->absolute ?
+        obs_data_get_int(settings, "abs_top") :
+        obs_data_get_int(settings, "top")
+    );
 	filter->right = (int)obs_data_get_int(settings, "right");
 	filter->bottom = (int)obs_data_get_int(settings, "bottom");
 	filter->abs_cx = (int)obs_data_get_int(settings, "cx");
@@ -84,13 +92,12 @@ static bool relative_clicked(obs_properties_t *props, obs_property_t *p,
 {
 	bool relative = obs_data_get_bool(settings, "relative");
 
-	obs_property_set_description(obs_properties_get(props, "left"),
-			relative ? obs_module_text("Crop.Left") : "X");
-	obs_property_set_description(obs_properties_get(props, "top"),
-			relative ? obs_module_text("Crop.Top") : "Y");
-
+	obs_property_set_visible(obs_properties_get(props, "left"), relative);
+	obs_property_set_visible(obs_properties_get(props, "top"), relative);
 	obs_property_set_visible(obs_properties_get(props, "right"), relative);
 	obs_property_set_visible(obs_properties_get(props, "bottom"), relative);
+	obs_property_set_visible(obs_properties_get(props, "abs_left"), !relative);
+	obs_property_set_visible(obs_properties_get(props, "abs_top"), !relative);
 	obs_property_set_visible(obs_properties_get(props, "cx"), !relative);
 	obs_property_set_visible(obs_properties_get(props, "cy"), !relative);
 
@@ -100,7 +107,12 @@ static bool relative_clicked(obs_properties_t *props, obs_property_t *p,
 
 static obs_properties_t *crop_filter_properties(void *data)
 {
+    struct crop_filter_data *filter = data;
 	obs_properties_t *props = obs_properties_create();
+    // @TODO: the base width and height are not from the source itself but from
+    // the current display (which is equal to obs_source_get_width)
+    int source_width = obs_source_get_base_width(filter->context);
+    int source_height = obs_source_get_base_height(filter->context);
 
 	obs_property_t *p = obs_properties_add_bool(props, "relative",
 			obs_module_text("Crop.Relative"));
@@ -108,12 +120,16 @@ static obs_properties_t *crop_filter_properties(void *data)
 	obs_property_set_modified_callback(p, relative_clicked);
 
     obs_properties_add_int_slider(props, "left", obs_module_text("Crop.Left"),
-            0, 8192, 1);
+            0, source_width, 1);
 	obs_properties_add_int_slider(props, "top", obs_module_text("Crop.Top"),
-			0, 8192, 1);
+			0, source_height, 1);
 	obs_properties_add_int_slider(props, "right", obs_module_text("Crop.Right"),
-			0, 8192, 1);
+			0, source_width, 1);
 	obs_properties_add_int_slider(props, "bottom", obs_module_text("Crop.Bottom"),
+			0, source_height, 1);
+	obs_properties_add_int_slider(props, "abs_left", obs_module_text("X"),
+			0, 8192, 1);
+	obs_properties_add_int_slider(props, "abs_top", obs_module_text("Y"),
 			0, 8192, 1);
 	obs_properties_add_int_slider(props, "cx", obs_module_text("Crop.Width"),
 			0, 8192, 1);
