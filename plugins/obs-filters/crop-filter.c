@@ -107,17 +107,17 @@ static obs_properties_t *crop_filter_properties(void *data)
 
 	obs_property_set_modified_callback(p, relative_clicked);
 
-	obs_properties_add_int(props, "left", obs_module_text("Crop.Left"),
+    obs_properties_add_int_slider(props, "left", obs_module_text("Crop.Left"),
+            0, 8192, 1);
+	obs_properties_add_int_slider(props, "top", obs_module_text("Crop.Top"),
 			0, 8192, 1);
-	obs_properties_add_int(props, "top", obs_module_text("Crop.Top"),
+	obs_properties_add_int_slider(props, "right", obs_module_text("Crop.Right"),
 			0, 8192, 1);
-	obs_properties_add_int(props, "right", obs_module_text("Crop.Right"),
+	obs_properties_add_int_slider(props, "bottom", obs_module_text("Crop.Bottom"),
 			0, 8192, 1);
-	obs_properties_add_int(props, "bottom", obs_module_text("Crop.Bottom"),
+	obs_properties_add_int_slider(props, "cx", obs_module_text("Crop.Width"),
 			0, 8192, 1);
-	obs_properties_add_int(props, "cx", obs_module_text("Crop.Width"),
-			0, 8192, 1);
-	obs_properties_add_int(props, "cy", obs_module_text("Crop.Height"),
+	obs_properties_add_int_slider(props, "cy", obs_module_text("Crop.Height"),
 			0, 8192, 1);
 
 	UNUSED_PARAMETER(data);
